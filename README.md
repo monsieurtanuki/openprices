@@ -2,15 +2,18 @@
 
 A new Flutter project.
 
-## Getting Started
+## How to get the shop OSM location id?
 
-This project is a starting point for a Flutter application.
+Find inspiration in https://overpass-turbo.eu/?Q=%2F*%0AThis%20is%20an%20example%20Overpass%20query.%0ATry%20it%20out%20by%20pressing%20the%20Run%20button%20above!%0AYou%20can%20find%20more%20examples%20with%20the%20Load%20tool.%0A*%2F%0Anode%0A%20%20%5Bamenity%3Ddrinking_water%5D%0A%20%20(%7B%7Bbbox%7D%7D)%3B%0Aout%3B&C=40.84618;14.25562;14&R
+```
+/*
+This is an example Overpass query.
+Try it out by pressing the Run button above!
+You can find more examples with the Load tool.
+*/
+node
+  [shop]
+  ({{bbox}});
+out;
+```
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

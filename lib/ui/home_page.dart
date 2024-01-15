@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_overpass/flutter_overpass.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openprices/model/openpricesapiclient2.dart';
+import 'package:openprices/model/osm_place.dart';
+import '../model/tile_provider.dart';
+import 'package:latlong2/latlong.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -21,6 +26,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Price>? _prices;
+  final List<Marker> _allMarkers = <Marker>[];
+
+  final MapController _mapController = MapController();
+  LatLng _initialCenter = LatLng(51.5, -0.09);
+  // TODO
+  double _initialZoom = 5;
+  // TODO
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +67,86 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: _prices == null
-          ? Center(child: Text('nothing'))
+          ? FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _initialCenter,
+                initialZoom: _initialZoom,
+                interactionOptions: InteractionOptions(
+                  rotationWinGestures: MultiFingerGesture.pinchZoom |
+                      MultiFingerGesture.pinchMove,
+                ),
+                maxZoom: 18,
+                onTap: (TapPosition tapPosition, LatLng latLng) async {
+                  print('tapped: $latLng / $tapPosition');
+                  final LatLngBounds bounds =
+                      _mapController.camera.visibleBounds;
+                  _mapController.camera.pixelBounds;
+                  final flutterOverpass = FlutterOverpass();
+                  print('searching...');
+
+                  const double factor = 0;
+
+                  double getMinPortion(
+                    final double min,
+                    final double max,
+                  ) =>
+                      min + (max - min) * factor;
+
+                  double getSouth() =>
+                      getMinPortion(bounds.south, bounds.north);
+
+                  double getWest() => getMinPortion(bounds.west, bounds.east);
+
+                  double getMaxPortion(
+                    final double min,
+                    final double max,
+                  ) =>
+                      max - (max - min) * factor;
+
+                  // smaller map
+                  double getNorth() =>
+                      getMaxPortion(bounds.south, bounds.north);
+
+                  double getEast() => getMaxPortion(bounds.west, bounds.east);
+
+                  final rawResults = await flutterOverpass.rawOverpassQL(
+                    query:
+                        'nwr[shop](${getSouth()},${getWest()},${getNorth()},${getEast()});',
+                    outputQuery: '[out:json];',
+                    useOutBody: true,
+                  );
+                  print('resul: $rawResults');
+                  final List<dynamic> toto = rawResults['elements'];
+                  _allMarkers.clear();
+                  for (final titi in toto) {
+                    if (titi['type'] != 'node') {
+                      continue;
+                    }
+                    final OsmPlace place = OsmPlace.fromMap(titi);
+                    print('titi2: ${place.tags}');
+                    _allMarkers.add(
+                      Marker(
+                        point: place.latLng,
+                        child: IconButton(
+                          icon: Icon(Icons.access_alarm),
+                          onPressed: () {
+                            print('place: ${place.tags['name']}');
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                  setState(() {});
+                },
+              ),
+              children: [
+                openStreetMapTileLayer,
+                MarkerLayer(
+                  markers: _allMarkers,
+                ),
+              ],
+            )
           : ListView.builder(
               itemCount: _prices!.length,
               itemBuilder: (

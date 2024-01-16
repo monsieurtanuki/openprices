@@ -64,7 +64,7 @@ class OpenPricesAPIClient2 {
     return GetPricesResults.error(ValidationErrors.fromJson(decodedResponse));
   }
 
-  static Future<String?> getAuthenticationToken({
+  static Future<String> getAuthenticationToken({
     required final String username,
     required final String password,
     final bool setCookie = false,
@@ -82,19 +82,54 @@ class OpenPricesAPIClient2 {
       },
     );
     dynamic decodedResponse = HttpHelper().jsonDecodeUtf8(response);
-    print('resp: $decodedResponse (${response.statusCode})');
     if (response.statusCode == 200) {
-      // {access_token: monsieurtanuki__U7a60e92f-zzzz-4fe8-806e-dfbd184972c5, token_type: bearer} (200)
-      return null;
+      return decodedResponse['access_token'];
     }
-    // {detail: Invalid authentication credentials} (401)
-    return null;
+    throw Exception(
+      'Could not retrieve token: $decodedResponse (${response.statusCode})',
+    );
   }
 
   static String _formatDate(final DateTime date) => _dateFormat.format(date);
 
-  static Future<void> addPrice({
+  static Future<dynamic> addPrice({
+    required final String productCode,
+    required final double price,
+    required final Currency currency,
+    required final int locationOSMId,
+    required final LocationOSMType locationOSMType,
+    required final DateTime date,
+    required final String bearerToken,
+    final UriProductHelper uriHelper = uriHelperFoodProd,
+  }) async {
+    final Uri uri = uriHelper.getUri(
+      path: '/api/v1/prices',
+      forcedHost: _getHost(uriHelper),
+    );
+    dynamic parameters = '{'
+        '"product_code": "$productCode",'
+        '"price": $price,'
+        '"currency": "${currency.name}",'
+        '"location_osm_id": $locationOSMId,'
+        '"location_osm_type": "${locationOSMType.offTag}",'
+        '"date": "${_dateFormat.format(date)}"'
+        '}';
+    final Response response = await post(
+      uri,
+      headers: <String, String>{
+        'Authorization': 'bearer $bearerToken',
+        'Content-Type': 'application/json',
+      },
+      body: parameters,
+    );
+    return HttpHelper().jsonDecodeUtf8(response);
     /*
+    {product_code: 5010477348678, product_name: null, category_tag: null, labels_tags: null, origins_tags: null, price: 3.99, price_without_discount: null, price_per: null, currency: EUR, location_osm_id: 5324689769, location_osm_type: NODE, date: 2024-01-13, proof_id: null, product_id: null, location_id: null, owner: monsieurtanuki, created: 2024-01-14T15:40:45.120187Z} (201)
+
+     */
+    // {detail: Not authenticated} (401)
+  }
+/*
     {
   "product_code": "16584958",
   "product_name": "PATE NOCCIOLATA BIO 700G",
@@ -111,59 +146,6 @@ class OpenPricesAPIClient2 {
   "proof_id": 15
 }
      */
-    required final String productCode,
-    required final double price,
-    required final Currency currency,
-    required final int locationOSMId,
-    required final LocationOSMType locationOSMType,
-    required final DateTime date,
-    final UriProductHelper uriHelper = uriHelperFoodProd,
-  }) async {
-    final Uri uri = uriHelper.getUri(
-      path: '/api/v1/prices',
-      forcedHost: _getHost(uriHelper),
-    );
-    const String bearerToken =
-        'monsieurtanuki__U96e5bc94-zzzz-4f5e-ab29-c6b8e7d72ed9'; // TODO
-    dynamic toto = '{'
-        '"product_code": "$productCode",'
-        '"price": $price,'
-        '"currency": "${currency.name}",'
-        '"location_osm_id": $locationOSMId,'
-        '"location_osm_type": "${locationOSMType.offTag}",'
-        '"date": "${_dateFormat.format(date)}"'
-        '}';
-    //"product_name": "PATE NOCCIOLATA BIO 700G",
-    //"category_tag": "en:tomatoes",
-    //"labels_tags": "en:organic",
-    //"origins_tags": "en:california",
-    //"price_without_discount": 2.99,
-    //"price_per": "KILOGRAM",
-    //"proof_id": 15
-    print('toto: $toto');
-    final Response response = await post(
-      uri,
-      headers: <String, String>{
-        'Authorization': 'bearer $bearerToken',
-        'Content-Type': 'application/json',
-      },
-      body: toto,
-    );
-    dynamic decodedResponse = HttpHelper().jsonDecodeUtf8(response);
-    print('add price: $decodedResponse (${response.statusCode})');
-    /*
-    {product_code: 5010477348678, product_name: null, category_tag: null, labels_tags: null, origins_tags: null, price: 3.99, price_without_discount: null, price_per: null, currency: EUR, location_osm_id: 5324689769, location_osm_type: NODE, date: 2024-01-13, proof_id: null, product_id: null, location_id: null, owner: monsieurtanuki, created: 2024-01-14T15:40:45.120187Z} (201)
-
-     */
-    /*
-    if (response.statusCode == 200) {
-      return GetPricesResults.result(GetPricesResult.fromJson(decodedResponse));
-    }
-    return GetPricesResults.error(ValidationErrors.fromJson(decodedResponse));
-
-     */
-    // {detail: Not authenticated} (401)
-  }
 
 /*
   NODE 5324689769

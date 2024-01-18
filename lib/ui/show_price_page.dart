@@ -37,16 +37,21 @@ class _ShowPricePageState extends State<ShowPricePage> {
                   final Price price = _prices![index];
                   final String date = formatDate(price.date) ?? 'no date';
                   // location_osm_id: 84818012, location_osm_type: WAY
-                  return ListTile(
-                    title: Text(price.productCode ?? 'no product code'),
-                    subtitle: Text(
-                      '${price.price}'
-                      ' '
-                      '${price.currency.toString().split('.')[1]}'
-                      '\n'
-                      '$date',
+                  return Card(
+                    child: ListTile(
+                      // TODO: 1 leading as product thumbnail
+                      // TODO: 3 link to price x product query
+                      // TODO: 2 display and link to place
+                      title: Text(price.productCode ?? 'no product code'),
+                      subtitle: Text(
+                        '${price.price}'
+                        ' '
+                        '${price.currency.toString().split('.')[1]}'
+                        '\n'
+                        '$date',
+                      ),
+                      isThreeLine: true,
                     ),
-                    isThreeLine: true,
                   );
                 },
               ),

@@ -7,8 +7,9 @@ import 'package:openprices/model/dao_double.dart';
 import 'package:openprices/model/dao_osm.dart';
 import 'package:openprices/model/local_database.dart';
 import 'package:openprices/model/osm_node.dart';
+import 'package:openprices/model/tile_provider.dart';
+import 'package:openprices/ui/add_price_date_page.dart';
 import 'package:provider/provider.dart';
-import '../model/tile_provider.dart';
 import 'package:latlong2/latlong.dart';
 
 class MapPage extends StatefulWidget {
@@ -85,7 +86,7 @@ class _MapPageState extends State<MapPage> {
           initialZoom: _initialZoom,
           initialRotation: _initialRotation,
           interactionOptions: const InteractionOptions(
-            // TODO get rid of rotation effect
+            // TODO: 2 get rid of rotation effect
             rotationThreshold: double.maxFinite,
             rotationWinGestures: MultiFingerGesture.none,
             pinchZoomWinGestures: MultiFingerGesture.pinchMove,
@@ -181,8 +182,9 @@ class _MapPageState extends State<MapPage> {
 
   void _refreshAllMarkers() {
     _allMarkers.clear();
-    _refreshExistingMarkers();
     _refreshNewMarkers();
+    // existing (more important?) markers on top
+    _refreshExistingMarkers();
   }
 
   void _refreshNewMarkers() {
@@ -196,11 +198,18 @@ class _MapPageState extends State<MapPage> {
       final OsmNode place = OsmNode.fromMap(element);
       final DaoOSM daoOSM = DaoOSM(context.read<LocalDatabase>());
       final String? existingJson = daoOSM.get(place.key);
-      _allMarkers.add(
-        existingJson == null ? _getNewPlace(place) : _getExistingPlace(place),
-      );
+      if (existingJson == null) {
+        _allMarkers.add(_getNewPlace(place));
+      }
     }
   }
+
+  static const double _sizeExisting = 36;
+  static const double _sizeNew = 24;
+  static const Color _colorExisting = Colors.red;
+  static const Color _colorNew = Colors.blue;
+  static const IconData _iconExisting = Icons.shopping_cart;
+  static const IconData _iconNew = Icons.shopping_cart_checkout;
 
   void _refreshExistingMarkers() {
     final DaoOSM daoOSM = DaoOSM(context.read<LocalDatabase>());
@@ -216,8 +225,9 @@ class _MapPageState extends State<MapPage> {
         point: place.latLng,
         child: IconButton(
           icon: const Icon(
-            Icons.shopping_cart_checkout,
-            color: Colors.blueAccent,
+            _iconNew,
+            color: _colorNew,
+            size: _sizeNew,
           ),
           onPressed: () async {
             final bool? result = await showDialog<bool>(
@@ -256,15 +266,17 @@ class _MapPageState extends State<MapPage> {
         ),
       );
 
+  // TODO: 0 add place nickname
   Marker _getExistingPlace(final OsmNode place) => Marker(
         point: place.latLng,
         child: IconButton(
           icon: const Icon(
-            Icons.shopping_cart,
-            color: Colors.redAccent,
+            _iconExisting,
+            color: _colorExisting,
+            size: _sizeExisting,
           ),
           onPressed: () async {
-            final bool? result = await showDialog<bool>(
+            final _Action? result = await showDialog<_Action>(
               context: context,
               builder: (final BuildContext context) {
                 final List<String> keys = List.of(place.tags.keys);
@@ -273,18 +285,41 @@ class _MapPageState extends State<MapPage> {
                 for (final String key in keys) {
                   items.add('$key => ${place.tags[key]}');
                 }
+                final ColorScheme colorScheme = Theme.of(context).colorScheme;
                 return AlertDialog(
-                  title: Text('Remove shop ${place.key}?'),
+                  title: Text('Shop ${place.key}'),
                   content: Text(items.join('\n')),
                   actions: [
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).pop(_Action.price),
+                      label: const Text('Add prices for this shop!'),
+                      icon: const Icon(Icons.add),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll(
+                          colorScheme.secondary,
+                        ),
+                        foregroundColor: MaterialStatePropertyAll(
+                          colorScheme.onSecondary,
+                        ),
+                      ),
+                    ),
                     ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(false),
+                      onPressed: () => Navigator.of(context).pop(_Action.none),
                       child: const Text('Cancel'),
                     ),
                     OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () =>
+                          Navigator.of(context).pop(_Action.delete),
                       icon: const Icon(Icons.delete),
                       label: const Text('Remove local shop'),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll(
+                          colorScheme.error,
+                        ),
+                        foregroundColor: MaterialStatePropertyAll(
+                          colorScheme.onError,
+                        ),
+                      ),
                     ),
                   ],
                 );
@@ -293,15 +328,36 @@ class _MapPageState extends State<MapPage> {
             if (!mounted) {
               return;
             }
-            if (result == true) {
-              await DaoOSM(context.read<LocalDatabase>()).put(
-                place.key,
-                null,
-              );
-              _refreshAllMarkers();
-              setState(() {});
+            switch (result) {
+              case null:
+              case _Action.none:
+                return;
+              case _Action.delete:
+                await DaoOSM(context.read<LocalDatabase>()).put(
+                  place.key,
+                  null,
+                );
+                _refreshAllMarkers();
+                setState(() {});
+                return;
+              case _Action.price:
+                await Navigator.push<void>(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (BuildContext context) => AddPriceDatePage(
+                      place: place,
+                    ),
+                  ),
+                );
+                return;
             }
           },
         ),
       );
+}
+
+enum _Action {
+  none,
+  price,
+  delete,
 }

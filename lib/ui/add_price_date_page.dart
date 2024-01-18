@@ -77,7 +77,13 @@ class _AddPriceDatePageState extends State<AddPriceDatePage> {
                 ),
               ),
             ),
-          )
+          ),
+          SizedBox(
+            width: double.maxFinite,
+            child: Card(
+              child: Text(widget.place.getTagsAsLines().join('\n')),
+            ),
+          ),
         ],
       ),
     );

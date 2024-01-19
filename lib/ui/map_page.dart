@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_overpass/flutter_overpass.dart';
-import 'package:openprices/model/dao_double.dart';
-import 'package:openprices/model/dao_osm.dart';
-import 'package:openprices/model/local_database.dart';
-import 'package:openprices/model/osm_node.dart';
-import 'package:openprices/model/tile_provider.dart';
-import 'package:openprices/ui/add_price_date_page.dart';
+import '../model/dao_double.dart';
+import '../model/dao_osm.dart';
+import '../local/local_database.dart';
+import '../model/osm_node.dart';
+import '../local/tile_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -266,7 +265,6 @@ class _MapPageState extends State<MapPage> {
         ),
       );
 
-  // TODO: 0 add place nickname
   Marker _getExistingPlace(final OsmNode place) => Marker(
         point: place.latLng,
         child: IconButton(
@@ -290,19 +288,6 @@ class _MapPageState extends State<MapPage> {
                   title: Text('Shop ${place.key}'),
                   content: Text(items.join('\n')),
                   actions: [
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).pop(_Action.price),
-                      label: const Text('Add prices for this shop!'),
-                      icon: const Icon(Icons.add),
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStatePropertyAll(
-                          colorScheme.secondary,
-                        ),
-                        foregroundColor: MaterialStatePropertyAll(
-                          colorScheme.onSecondary,
-                        ),
-                      ),
-                    ),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(_Action.none),
                       child: const Text('Cancel'),
@@ -340,16 +325,6 @@ class _MapPageState extends State<MapPage> {
                 _refreshAllMarkers();
                 setState(() {});
                 return;
-              case _Action.price:
-                await Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => AddPriceDatePage(
-                      place: place,
-                    ),
-                  ),
-                );
-                return;
             }
           },
         ),
@@ -358,6 +333,5 @@ class _MapPageState extends State<MapPage> {
 
 enum _Action {
   none,
-  price,
   delete,
 }

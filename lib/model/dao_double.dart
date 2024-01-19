@@ -1,5 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import 'abstract_dao.dart';
+import '../local/abstract_dao.dart';
 
 /// Where we store double's.
 class DaoDouble extends AbstractDao {

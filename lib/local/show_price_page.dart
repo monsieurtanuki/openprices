@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
-import 'package:openprices/model/dao_secured_string.dart';
-import 'package:openprices/model/openpricesapiclient2.dart';
-import 'package:openprices/ui/common.dart';
-import 'package:openprices/ui/user_page.dart';
+import 'dao_secured_string.dart';
+import '../model/openpricesapiclient2.dart';
+import '../ui/common.dart';
+import '../ui/user_page.dart';
 
 class ShowPricePage extends StatefulWidget {
   const ShowPricePage({super.key});

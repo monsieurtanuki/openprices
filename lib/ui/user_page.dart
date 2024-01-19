@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:openprices/model/dao_secured_string.dart';
-import 'package:openprices/model/openpricesapiclient2.dart';
-import 'package:openprices/ui/common.dart';
+import '../local/dao_secured_string.dart';
+import '../model/openpricesapiclient2.dart';
+import '../ui/common.dart';
 
 const String daoSecuredStringTagUser = 'user';
 const String daoSecuredStringTagToken = 'token';

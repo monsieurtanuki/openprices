@@ -31,8 +31,8 @@ class OsmNode {
   LocationOSMType get type => LocationOSMType.node;
 
   LatLng get latLng => LatLng(
-        tags[_fakeTagLatitude],
-        tags[_fakeTagLongitude],
+        tags[fakeTagLatitude],
+        tags[fakeTagLongitude],
       );
 
   List<String> getTagsAsLines() {
@@ -45,18 +45,23 @@ class OsmNode {
     return items;
   }
 
+  String get nickname => tags[fakeTagNickname] ?? '';
+
+  set nickname(String value) => tags[fakeTagNickname] = value;
+
   Map<String, dynamic> getJson() => tags;
 
-  static const String _fakeTagLatitude = '__lat';
-  static const String _fakeTagLongitude = '__lon';
+  static const String fakeTagLatitude = '__lat';
+  static const String fakeTagLongitude = '__lon';
+  static const String fakeTagNickname = '__nickname';
 
   static Map<String, dynamic> _getTags(
     final double latitude,
     final double longitude,
     final Map<String, dynamic> tags,
   ) {
-    tags[_fakeTagLatitude] = latitude;
-    tags[_fakeTagLongitude] = longitude;
+    tags[fakeTagLatitude] = latitude;
+    tags[fakeTagLongitude] = longitude;
     return tags;
   }
 }

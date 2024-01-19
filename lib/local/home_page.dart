@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:openprices/ui/add_price_shop_page.dart';
-import 'package:openprices/ui/map_page.dart';
-import 'package:openprices/ui/show_price_page.dart';
-import 'package:openprices/ui/user_page.dart';
+import '../ui/barcode_page.dart';
+import '../ui/map_page.dart';
+import 'show_price_page.dart';
+import '../ui/user_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
                 onTap: () async => Navigator.push<void>(
                   context,
                   MaterialPageRoute<void>(
-                    builder: (BuildContext context) => const AddPriceShopPage(),
+                    builder: (BuildContext context) => const BarcodePage(),
                   ),
                 ),
                 leading: const Icon(Icons.add),

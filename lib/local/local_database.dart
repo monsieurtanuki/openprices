@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:openprices/model/dao_osm.dart';
-import 'package:openprices/model/dao_string.dart';
+import '../model/dao_osm.dart';
+import 'dao_string.dart';
 import 'abstract_dao.dart';
-import 'dao_double.dart';
+import '../model/dao_double.dart';
 
 class LocalDatabase extends ChangeNotifier {
   LocalDatabase._();

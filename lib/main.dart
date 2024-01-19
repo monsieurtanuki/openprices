@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
-import 'package:openprices/model/local_database.dart';
-import 'package:openprices/ui/home_page.dart';
+import 'local/local_database.dart';
+import 'local/home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 

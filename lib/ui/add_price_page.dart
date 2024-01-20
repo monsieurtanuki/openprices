@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
+import 'package:openprices/model/maybe_error.dart';
+import 'package:openprices/model/proof.dart';
 import 'package:provider/provider.dart';
 import '../local/dao_secured_string.dart';
 import '../local/dao_string.dart';
@@ -7,9 +10,10 @@ import '../local/local_database.dart';
 import '../model/dao_osm.dart';
 import '../model/openpricesapiclient2.dart';
 import '../model/osm_node.dart';
+import '../model/proof_type.dart';
 import '../ui/common.dart';
 import '../ui/select_place_page.dart';
-import '../ui/user_page.dart';
+import '../local/user_page.dart';
 
 class AddPricePage extends StatefulWidget {
   const AddPricePage({
@@ -30,6 +34,8 @@ class _AddPricePageState extends State<AddPricePage> {
   final TextEditingController _controller = TextEditingController();
 
   static const Currency _currency = Currency.EUR;
+
+  int? _proofId;
 
   @override
   void initState() {
@@ -62,10 +68,10 @@ class _AddPricePageState extends State<AddPricePage> {
       appBar: AppBar(
         title: const Text('Add prices!'),
       ),
-      floatingActionButton: place == null || _controller.text.isEmpty
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () async {
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: place == null || _controller.text.isEmpty || _proofId == null
+            ? null
+            : () async {
                 final ScaffoldMessengerState state =
                     ScaffoldMessenger.of(context);
                 try {
@@ -77,38 +83,36 @@ class _AddPricePageState extends State<AddPricePage> {
                       (await DaoSecuredString.get(daoSecuredStringTagToken))!;
                   final double price =
                       double.parse(_controller.text.replaceAll(',', '.'));
-                  // TODO: 1 add receipt download
-                  final dynamic result = await OpenPricesAPIClient2.addPrice(
+                  final MaybeError<Price> result =
+                      await OpenPricesAPIClient2.addPrice(
                     productCode: barcode,
                     price: price,
                     currency: _currency,
                     locationOSMId: place!.id,
                     locationOSMType: place.type,
                     date: day,
+                    proofId: _proofId,
                     bearerToken: token,
                   );
                   final String message;
-                  final dynamic detail = result['detail'];
-                  final dynamic created = result['created'];
-                  if (detail != null) {
-                    message = 'Error: $detail';
-                  } else if (created != null) {
-                    message = 'Created: $created';
+                  if (result.isError) {
+                    message = 'Could not add the price: ${result.error}';
                   } else {
-                    message = "I don't know: $result";
+                    message = 'Price created at ${result.value.created}';
                   }
                   state.showSnackBar(SnackBar(content: Text(message)));
                 } catch (e) {
+                  print('EEE: $e');
                   state.showSnackBar(
-                    const SnackBar(
-                      content: Text('Could not add this price :('),
+                    SnackBar(
+                      content: Text('Could not add this price :( - $e'),
                     ),
                   );
                 }
               },
-              label: const Text('Add this single price now!'),
-              icon: const Icon(Icons.add),
-            ),
+        label: const Text('Add this single price now!'),
+        icon: const Icon(Icons.add),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -194,10 +198,46 @@ class _AddPricePageState extends State<AddPricePage> {
                   setState(() {});
                 },
               ),
-            )
+            ),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.photo_camera_rounded),
+                title: Text('Proof'),
+                onTap: _proofId != null
+                    ? null
+                    : () async {
+                        _proofId = await _getProofId();
+                        setState(() {});
+                      },
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<int?> _getProofId() async {
+    print('coucou0');
+    final ImagePicker picker = ImagePicker();
+    print('coucou1');
+    final XFile? xFile = await picker.pickImage(source: ImageSource.gallery);
+    print('coucou2');
+    if (xFile == null) {
+      return null;
+    }
+    print('coucou4');
+    final String token =
+        (await DaoSecuredString.get(daoSecuredStringTagToken))!;
+    final MaybeError<Proof> result = await OpenPricesAPIClient2.uploadProof(
+      imageUri: Uri.parse(xFile.path),
+      proofType: ProofType.receipt,
+      isPublic: true,
+      bearerToken: token,
+    );
+    if (result.isError) {
+      throw Exception('Could not upload proof: ${result.error}');
+    }
+    return result.value.id!;
   }
 }

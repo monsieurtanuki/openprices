@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../local/dao_secured_string.dart';
+import 'dao_secured_string.dart';
 import '../model/openpricesapiclient2.dart';
 import '../ui/common.dart';
 

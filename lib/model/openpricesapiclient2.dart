@@ -2,6 +2,8 @@ import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openprices/model/http_helper.dart' as http_helper2;
+import 'package:openprices/model/maybe_error.dart';
+import 'package:openprices/model/proof.dart';
 import 'package:openprices/model/proof_type.dart';
 
 /// Client calls of the Open Prices API.
@@ -94,13 +96,20 @@ class OpenPricesAPIClient2 {
 
   static String _formatDate(final DateTime date) => _dateFormat.format(date);
 
-  static Future<dynamic> addPrice({
+  static Future<MaybeError<Price>> addPrice({
     required final String productCode,
+    // TODO: 2 product name
+    // TODO: 2 category tag
+    // TODO: 2 labels tags
+    // TODO: 2 origins tags
     required final double price,
+    // TODO: 2 price without discount
+    // TODO: 2 price per
     required final Currency currency,
     required final int locationOSMId,
     required final LocationOSMType locationOSMType,
     required final DateTime date,
+    final int? proofId,
     required final String bearerToken,
     final UriProductHelper uriHelper = uriHelperFoodProd,
   }) async {
@@ -108,12 +117,13 @@ class OpenPricesAPIClient2 {
       path: '/api/v1/prices',
       forcedHost: _getHost(uriHelper),
     );
-    dynamic parameters = '{'
+    final String parameters = '{'
         '"product_code": "$productCode",'
         '"price": $price,'
         '"currency": "${currency.name}",'
         '"location_osm_id": $locationOSMId,'
         '"location_osm_type": "${locationOSMType.offTag}",'
+        '${proofId == null ? '' : '"proof_id": $proofId,'}'
         '"date": "${_dateFormat.format(date)}"'
         '}';
     final Response response = await post(
@@ -124,15 +134,22 @@ class OpenPricesAPIClient2 {
       },
       body: parameters,
     );
-    return HttpHelper().jsonDecodeUtf8(response);
+    print('bbbooody: ${response.body}');
+    final Map<String, dynamic> json = HttpHelper().jsonDecodeUtf8(response);
+    if (response.statusCode == 201) {
+      return MaybeError<Price>.value(Price.fromJson(json));
+    }
+    return MaybeError<Price>.error(response.body);
     /*
-    {product_code: 5010477348678, product_name: null, category_tag: null, labels_tags: null, origins_tags: null, price: 3.99, price_without_discount: null, price_per: null, currency: EUR, location_osm_id: 5324689769, location_osm_type: NODE, date: 2024-01-13, proof_id: null, product_id: null, location_id: null, owner: monsieurtanuki, created: 2024-01-14T15:40:45.120187Z} (201)
+(201)
+{"product_code":"3560071492755","product_name":null,"category_tag":null,"labels_tags":null,"origins_tags":null,"price":3.99,"price_without_discount":null,"price_per":null,"currency":"EUR","location_osm_id":4966187139,"location_osm_type":"NODE","date":"2024-01-18","proof_id":1663,"product_id":null,"location_id":null,"owner":"monsieurtanuki","created":"2024-01-20T18:09:57.887607Z"}
 
+(401)
+{detail: Not authenticated}
      */
-    // {detail: Not authenticated} (401)
   }
 
-  static Future<void> uploadProof({
+  static Future<MaybeError<Proof>> uploadProof({
     required final Uri imageUri,
     required final ProofType proofType,
     required final bool isPublic,
@@ -143,7 +160,8 @@ class OpenPricesAPIClient2 {
       path: '/api/v1/proofs/upload',
       forcedHost: _getHost(uriHelper),
     );
-    await http_helper2.HttpHelper().doMultipartRequest(
+    final StreamedResponse response =
+        await http_helper2.HttpHelper().doMultipartRequest(
       uri,
       <String, String>{
         'type': proofType.offTag,
@@ -155,6 +173,32 @@ class OpenPricesAPIClient2 {
       bearerToken: bearerToken,
       uriHelper: uriHelper,
     );
+    final String responseBody =
+        await http_helper2.HttpHelper().extractResponseAsString(
+      response,
+    );
+    // 201: "created"
+    if (response.statusCode == 201) {
+      final Map<String, dynamic> json =
+          http_helper2.HttpHelper().jsonDecode(responseBody);
+      return MaybeError<Proof>.value(Proof.fromJson(json));
+    }
+    return MaybeError<Proof>.error(responseBody);
+/*
+401
+{"detail":"Not authenticated"}
+
+201
+{
+  "id":1576,
+  "file_path":"0002/Vl3AaqMmr5.bin",
+  "mimetype":"application/octet-stream",
+  "type":"RECEIPT",
+  "owner":"monsieurtanuki",
+  "created":"2024-01-20T09:38:26.510286Z",
+  "is_public":true
+}
+ */
   }
 
 /*

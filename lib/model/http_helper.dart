@@ -28,7 +28,7 @@ class HttpHelper {
   /// The data / body of the request has to be provided as map. (key, value)
   /// The files to send have to be provided as map containing the source file uri.
   /// As result a json object of the "type" Status is expected.
-  Future<void> doMultipartRequest(
+  Future<http.StreamedResponse> doMultipartRequest(
     Uri uri,
     Map<String, String> body, {
     Map<String, Uri>? files,
@@ -67,15 +67,10 @@ class HttpHelper {
     }
 
     // get the response status
-    http.StreamedResponse response = await request.send();
-
-    print('Rstat: ${response.statusCode}');
-    final String responseBody = await _extractResponseAsString(response);
-    print('Rbody: $responseBody');
+    return request.send();
   }
 
-  Future<String> _extractResponseAsString(
-      http.StreamedResponse response) async {
+  Future<String> extractResponseAsString(http.StreamedResponse response) async {
     final Completer<String> completer = Completer<String>();
     final StringBuffer contents = StringBuffer();
     response.stream.transform(utf8.decoder).listen((data) {

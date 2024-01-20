@@ -3,7 +3,7 @@ import 'package:openfoodfacts/openfoodfacts.dart';
 import 'dao_secured_string.dart';
 import '../model/openpricesapiclient2.dart';
 import '../ui/common.dart';
-import '../ui/user_page.dart';
+import '../local/user_page.dart';
 
 class ShowPricePage extends StatefulWidget {
   const ShowPricePage({super.key});

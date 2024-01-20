@@ -1,6 +1,8 @@
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
+import 'package:openprices/model/http_helper.dart' as http_helper2;
+import 'package:openprices/model/proof_type.dart';
 
 /// Client calls of the Open Prices API.
 class OpenPricesAPIClient2 {
@@ -129,6 +131,32 @@ class OpenPricesAPIClient2 {
      */
     // {detail: Not authenticated} (401)
   }
+
+  static Future<void> uploadProof({
+    required final Uri imageUri,
+    required final ProofType proofType,
+    required final bool isPublic,
+    required final String bearerToken,
+    final UriProductHelper uriHelper = uriHelperFoodProd,
+  }) async {
+    final Uri uri = uriHelper.getUri(
+      path: '/api/v1/proofs/upload',
+      forcedHost: _getHost(uriHelper),
+    );
+    await http_helper2.HttpHelper().doMultipartRequest(
+      uri,
+      <String, String>{
+        'type': proofType.offTag,
+        'is_public': isPublic ? 'true' : 'false',
+      },
+      files: <String, Uri>{
+        'file': imageUri,
+      },
+      bearerToken: bearerToken,
+      uriHelper: uriHelper,
+    );
+  }
+
 /*
     {
   "product_code": "16584958",

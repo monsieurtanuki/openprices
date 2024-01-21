@@ -93,6 +93,7 @@ class _AddPricePageState extends State<AddPricePage> {
                     date: day,
                     proofId: _proofId,
                     bearerToken: token,
+                    uriHelper: uriHelperFoodTest,
                   );
                   final String message;
                   if (result.isError) {
@@ -234,6 +235,7 @@ class _AddPricePageState extends State<AddPricePage> {
       proofType: ProofType.receipt,
       isPublic: true,
       bearerToken: token,
+      uriHelper: uriHelperFoodTest,
     );
     if (result.isError) {
       throw Exception('Could not upload proof: ${result.error}');

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openfoodfacts/openfoodfacts.dart';
 import 'dao_secured_string.dart';
 import '../model/openpricesapiclient2.dart';
 import '../ui/common.dart';
@@ -100,6 +101,7 @@ class _UserPageState extends State<UserPage> {
                           await OpenPricesAPIClient2.getAuthenticationToken(
                         username: user,
                         password: password,
+                        uriHelper: uriHelperFoodTest,
                       );
                       await DaoSecuredString.put(
                         key: daoSecuredStringTagToken,

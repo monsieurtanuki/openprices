@@ -79,6 +79,7 @@ class _ShowPricePageState extends State<ShowPricePage> {
       //currency: Currency.EUR,
       //dateGte: DateTime.utc(2024, 1, 13),
       owner: user.isEmpty ? null : user,
+      uriHelper: uriHelperFoodTest,
     );
     if (results.result == null) {
       state.showSnackBar(
